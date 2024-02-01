@@ -54,30 +54,37 @@ func main() {
 
 	// Count of right answers
 	count := 0
-	// Save user's anwers
-	var userAnswer string
 
 	// Channel for communication between Goroutine and Main function
 	quizChannel := make(chan int)
+	answerChannel := make(chan string)
 
 	go func() {
-		time.Sleep(time.Second * 30)
+		time.Sleep(time.Second * 10)
 		close(quizChannel)
 	}()
 
 	for i := 0; i < len(problemList); i++ {
+		fmt.Print(problemList[i].question + " = ")
+
+		go func() {
+			// Save user's anwers
+			var userAnswer string
+			fmt.Scan(&userAnswer)
+			answerChannel <- userAnswer
+		}()
+
 		select {
 		case <-quizChannel:
-			fmt.Printf("Total score is %d out of %d", count, len(problemList))
+			fmt.Printf("\nTotal score is %d out of %d", count, len(problemList))
 			return
-		default:
-			fmt.Print(problemList[i].question + " = ")
-			fmt.Scan(&userAnswer)
-			if userAnswer == problemList[i].answer {
+		case answer := <-answerChannel:
+			if answer == problemList[i].answer {
 				count++
 			}
 		}
 	}
 
-	fmt.Printf("Total score is %d out of %d", count, len(records))
+	fmt.Printf("\nTotal score is %d out of %d", count, len(records))
+	return
 }
