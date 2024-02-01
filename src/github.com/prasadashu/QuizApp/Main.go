@@ -29,6 +29,7 @@ func parseProblems(records [][]string) []problems {
 func main() {
 	// Get config variables
 	quizFile := flag.String("f", "quiz.csv", "path to quiz file")
+	quizTime := flag.Int("t", 30, "time duration for the quiz in seconds")
 	flag.Parse()
 
 	// Open CSV file
@@ -56,13 +57,9 @@ func main() {
 	count := 0
 
 	// Channel for communication between Goroutine and Main function
-	quizChannel := make(chan int)
 	answerChannel := make(chan string)
 
-	go func() {
-		time.Sleep(time.Second * 10)
-		close(quizChannel)
-	}()
+	timer := time.NewTimer(time.Duration(*quizTime) * (time.Second))
 
 	for i := 0; i < len(problemList); i++ {
 		fmt.Print(problemList[i].question + " = ")
@@ -75,7 +72,7 @@ func main() {
 		}()
 
 		select {
-		case <-quizChannel:
+		case <-timer.C:
 			fmt.Printf("\nTotal score is %d out of %d", count, len(problemList))
 			return
 		case answer := <-answerChannel:
